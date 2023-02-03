@@ -2,17 +2,15 @@ const ErrCheckHasNoChecks = new Error("check called with no checks")
 const ErrNoOptions = new Error("no options were provided")
 const ErrNotIterable = new Error("value was not iterable")
 
-class Result extends AggregateError {
+class Result {
+    errors: CheckErr[] = []
+
     isValid() {
         return this.errors.length === 0
     }
 
     must() {
         if (this.errors.length > 0) throw new AggregateError(this.errors)
-    }
-
-    constructor() {
-        super([]);
     }
 }
 
@@ -22,10 +20,9 @@ type CheckErrConstructor = {
     [key: string | symbol]: unknown
 }
 
-class CheckErr extends Error {
+export class CheckErr extends Error {
     expected: unknown
     received: unknown
-
     [key: string | symbol]: unknown
 
     constructor({expected, received}: CheckErrConstructor) {
@@ -36,7 +33,7 @@ class CheckErr extends Error {
 
 type check = (argument: any) => CheckErr | void
 
-function check(received: unknown, ...checks: check[]): Result {
+export function check(received: unknown, ...checks: check[]): Result {
     // Check checks isn't empty
     if (checks.length === 0) throw ErrCheckHasNoChecks
 
@@ -49,11 +46,11 @@ function check(received: unknown, ...checks: check[]): Result {
     return res
 }
 
-const expect = {
+export const expect = {
     any(...expected: unknown[]): check {
         return function (received: unknown): CheckErr | void {
             for (let i = 0; i < expected.length; i++) {
-                if (received === expected) return
+                if (received === expected[i]) return
             }
 
             return new CheckErr({expected, received})
@@ -71,7 +68,7 @@ const expect = {
     not(...expected: unknown[]): check {
         return function (received: unknown): CheckErr | void {
             for (let i = 0; i < expected.length; i++) {
-                if (received !== expected) continue
+                if (received !== expected[i]) continue
 
                 return new CheckErr({expected, received})
             }
@@ -163,7 +160,7 @@ const expect = {
     },
 }
 
-const logic = {
+export const logic = {
     and(...checks: check[]): check {
         return function (received: unknown): CheckErr | void {
             const errs = []
@@ -191,11 +188,4 @@ const logic = {
             return new CheckErr({expected: check, received, errs})
         }
     },
-}
-
-module.exports = {
-    CheckErr,
-    check,
-    expect,
-    logic,
 }
