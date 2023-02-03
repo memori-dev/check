@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "target": "ES5",
+    "strict": true,
+    "strictNullChecks": true,
+    "watch": true,
+    "types": [
+      "node"
+    ],
+    "lib": [
+      "es2021.intl",
+      "es2021.promise"
+    ]
+  }
+}
